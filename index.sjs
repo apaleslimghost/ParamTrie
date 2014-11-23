@@ -15,33 +15,46 @@ Option.prototype.toString = function() {
 
 union ParamBranch {
 	Branch { value: * },
-	Param  { name: *}
+	Param  { value: * }
+} deriving require('adt-simple').Base;
+
+data ParamChild {
+	param: String,
+	child: ParamTrie
 } deriving require('adt-simple').Base;
 
 /* @overrideapply */
 data ParamTrie {
 	value: Option,
-	children: Map
+	children: Map,
+	paramChildren: Array
 } deriving require('adt-simple').Base;
 
 ParamTrie.create = function {
-	(x @ Array, v) if x.length === 0 => new ParamTrie(Option.of(v), Map()),
+	(x @ Array, v) if x.length === 0 => new ParamTrie(Option.of(v), Map(), []),
 	([b, ...rest], v) => new ParamTrie(
 		Option.None,
-		Map([[b, ParamTrie.create(rest, v)]])
+		match b {
+			Branch(b) => Map([[b, ParamTrie.create(rest, v)]]),
+			Param => Map()
+		},
+		match b {
+			Branch => [],
+			Param(p) => [ParamChild(p, ParamTrie.create(rest, v))]
+		}
 	)
 };
 
-function lookup {
-	ParamTrie{value}, [] => value
-	ParamTrie{children}, [b, ...rest] => match b {
-		Branch{value} =>
-		Option.fromNullable(children.get(b)).chain(function {
-			trie => lookup(trie, rest)
-		});
-}
+// function lookup {
+// 	ParamTrie{value}, [] => value
+// 	ParamTrie{children}, [b, ...rest] => match b {
+// 		Branch{value} =>
+// 		Option.fromNullable(children.get(b)).chain(function {
+// 			trie => lookup(trie, rest)
+// 		});
+// }
 
-var t = trie
+console.log(
 	ParamTrie.create(
 		[
 			Branch("foo"),
