@@ -6,6 +6,8 @@ function nullableToArray {
 	x    => [x]
 };
 
+var pairs = λ m => m.map(λ (v, k) => [k, v]).toArray();
+
 Option.prototype.toString = function() {
 	return this.cata({
 		None: function()  { return 'None'; },
@@ -27,11 +29,11 @@ data ParamChild {
 data ParamTrie {
 	value: Option,
 	children: Map,
-	paramChildren: Array
+	paramChildren: Map
 } deriving require('adt-simple').Base;
 
 ParamTrie.create = function {
-	(x @ Array, v) if x.length === 0 => new ParamTrie(Option.of(v), Map(), []),
+	(x @ Array, v) if x.length === 0 => new ParamTrie(Option.of(v), Map(), Map()),
 	([b, ...rest], v) => new ParamTrie(
 		Option.None,
 		match b {
@@ -39,8 +41,8 @@ ParamTrie.create = function {
 			Param => Map()
 		},
 		match b {
-			Branch => [],
-			Param(p) => [ParamChild(p, ParamTrie.create(rest, v))]
+			Branch => Map(),
+			Param(p) => Map([[p, ParamTrie.create(rest, v)]])
 		}
 	)
 };
@@ -68,14 +70,22 @@ function lookup {
 		.chain(function {
 			trie @ ParamTrie => lookup(trie, rest)
 		}).concat(
-			paramChildren.chain(function {
-				ParamChild{param, child} => lookup(child, rest).map(function {
+			pairs(paramChildren).chain(function {
+				[param, child] => lookup(child, rest).map(function {
 					result @ LookupResult => mergeResult(result, Map([[param, b]]))
 				})
 			})
 		);
 	}
 }
+
+// function concat {
+// 	(ParamTrie(v1, c1, pc1), ParamTrie(v2, c2, pc2)) => new ParamTree(
+// 		v1,
+// 		c1.mergeWith(concat, c2),
+
+// 	)
+// }
 
 var t = ParamTrie.create(
 	[
@@ -88,8 +98,3 @@ var t = ParamTrie.create(
 
 console.log(lookup(t, ["foo", "bar", "quux"]));
 
-// function insert {
-// 	ParamTrie{children}, [], v => ParamTrie(Option.Some(v), children),
-// 	ParamTrie{value, children}, [b @ ParamBranch, ...rest], v => {
-// 	}
-// }
