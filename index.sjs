@@ -1,6 +1,11 @@
 var Option = require('fantasy-options');
 var Map    = require('immutable').Map;
 
+Option.Some.unapply = function {
+	o @ Option.Some => o.x,
+	* => undefined
+};
+
 function nullableToArray {
 	null => [],
 	x    => [x]
@@ -79,13 +84,27 @@ function lookup {
 	}
 }
 
-// function concat {
-// 	(ParamTrie(v1, c1, pc1), ParamTrie(v2, c2, pc2)) => new ParamTree(
-// 		v1,
-// 		c1.mergeWith(concat, c2),
+function mergeVals(v1, v2) {
+	return v1.cata({
+		None: function() {
+			return v2;
+		},
+		Some: function(x) {
+			return v2.cata({
+				None: function()  { return Option.of(x) },
+				Some: function(y) { return Option.of(y) }
+			})
+		}
+	});
+}
 
-// 	)
-// }
+function concat {
+	(ParamTrie(v1, c1, pc1), ParamTrie(v2, c2, pc2)) => new ParamTrie(
+		mergeVals(v1, v2),
+		c1.mergeWith(concat, c2),
+		pc1.mergeWith(concat, pc2)
+	)
+}
 
 var t = ParamTrie.create(
 	[
@@ -93,8 +112,13 @@ var t = ParamTrie.create(
 		Branch("bar"),
 		Param("id")
 	],
-	function() {}
+	"a"
 );
 
-console.log(lookup(t, ["foo", "bar", "quux"]));
+var s = ParamTrie.create(
+	[Branch("foo")],
+	"b"
+);
+
+console.log(concat(t, s).toString());
 
