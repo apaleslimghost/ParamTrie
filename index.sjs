@@ -98,7 +98,7 @@ function mergeVals(v1, v2) {
 	});
 }
 
-function concat {
+function merge {
 	(ParamTrie(v1, c1, pc1), ParamTrie(v2, c2, pc2)) => new ParamTrie(
 		mergeVals(v1, v2),
 		c1.mergeWith(concat, c2),
@@ -120,5 +120,5 @@ var s = ParamTrie.create(
 	"b"
 );
 
-console.log(concat(t, s).toString());
+console.log(merge(t, s).toString());
 
