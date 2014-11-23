@@ -1,0 +1,34 @@
+{
+  "name": "param-trie",
+  "version": "1.0.0",
+  "description": "A trie with holes for parameters",
+  "main": "index.js",
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/quarterto/ParamTrie.git"
+  },
+  "keywords": [
+    "trie",
+    "parameter",
+    "holes",
+    "regex"
+  ],
+  "author": "Matt Brennan <mwrbrennan@gmail.com> (http://blog.153.io/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/quarterto/ParamTrie/issues"
+  },
+  "homepage": "https://github.com/quarterto/ParamTrie",
+  "dependencies": {
+    "fantasy-options": "git://github.com/fantasyland/fantasy-options",
+    "immutable": "^3.2.1"
+  },
+  "devDependencies": {
+    "adt-simple": "^0.1.3",
+    "sparkler": "^0.3.4",
+    "sweet.js": "^0.7.2"
+  }
+}
