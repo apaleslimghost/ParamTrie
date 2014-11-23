@@ -24,6 +24,7 @@ data ParamTrie {
 	paramChildren: Map
 } deriving require('adt-simple').Base;
 
+ParamTrie.empty = λ -> new ParamTrie(Option.None, Map(), Map());
 ParamTrie.of = λ a -> new ParamTrie(Option.of(v), Map(), Map());
 ParamTrie.ofPath = function {
 	([...x], v) if x.length === 0 => ParamTrie.of(v),
@@ -39,6 +40,11 @@ ParamTrie.ofPath = function {
 		}
 	)
 };
+
+ParamTrie.fromMap = λ m -> m.reduce(
+	λ (t, v, k) -> t.insertPath(k, v),
+	ParamTrie.empty()
+);
 
 data LookupResult {
 	value: *,
