@@ -1,9 +1,9 @@
 var Option = require('fantasy-options');
 var Map    = require('immutable').Map;
 
-Option.fromNullable = function {
-	null => Option.None,
-	x    => Option.Some(x)
+function nullableToArray {
+	null => [],
+	x    => [x]
 };
 
 Option.prototype.toString = function() {
@@ -45,25 +45,48 @@ ParamTrie.create = function {
 	)
 };
 
-// function lookup {
-// 	ParamTrie{value}, [] => value
-// 	ParamTrie{children}, [b, ...rest] => match b {
-// 		Branch{value} =>
-// 		Option.fromNullable(children.get(b)).chain(function {
-// 			trie => lookup(trie, rest)
-// 		});
-// }
+data LookupResult {
+	value: *,
+	params: Map
+} deriving require('adt-simple').Base;
 
-console.log(
-	ParamTrie.create(
-		[
-			Branch("foo"),
-			Branch("bar"),
-			Param("id")
-		],
-		function() {}
-	).toString()
+Array.prototype.chain = function(f) {
+	return this.reduce(
+		λ (a, x) -> a.concat(f(x)),
+		[]
+	);
+}
+
+function mergeResult {
+	(LookupResult{value, params}, more) => LookupResult(value, params.merge(more))
+}
+
+function lookup {
+	(ParamTrie{value}, x @ Array) if x.length === 0 => [LookupResult(value, Map())],
+	(ParamTrie{children, paramChildren}, [b, ...rest]) => {
+		return nullableToArray(children.get(b, null))
+		.chain(function {
+			trie @ ParamTrie => lookup(trie, rest)
+		}).concat(
+			paramChildren.chain(function {
+				ParamChild{param, child} => lookup(child, rest).map(function {
+					result @ LookupResult => mergeResult(result, Map([[param, b]]))
+				})
+			})
+		);
+	}
+}
+
+var t = ParamTrie.create(
+	[
+		Branch("foo"),
+		Branch("bar"),
+		Param("id")
+	],
+	function() {}
 );
+
+console.log(lookup(t, ["foo", "bar", "quux"]));
 
 // function insert {
 // 	ParamTrie{children}, [], v => ParamTrie(Option.Some(v), children),
