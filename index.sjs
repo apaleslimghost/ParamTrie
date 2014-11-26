@@ -1,5 +1,6 @@
 var Option = require('fantasy-options');
 var Map    = require('immutable').Map;
+var Base   = require('adt-simple').Base;
 
 function nullableToArray {
 	null => [],
@@ -11,34 +12,35 @@ var pairs = λ m => m.map(λ (v, k) => [k, v]).toArray();
 union ParamBranch {
 	Branch { value: * },
 	Param  { value: * }
-} deriving require('adt-simple').Base;
+} deriving Base;
 
 data ParamChild {
 	param: String,
 	child: ParamTrie
-} deriving require('adt-simple').Base;
+} deriving Base;
 
 data ParamTrie {
 	value: Option,
 	children: Map,
 	paramChildren: Map
-} deriving require('adt-simple').Base;
+} deriving Base;
 
 ParamTrie.empty = λ -> new ParamTrie(Option.None, Map(), Map());
-ParamTrie.of = λ a -> new ParamTrie(Option.of(v), Map(), Map());
+ParamTrie.of = λ v -> new ParamTrie(Option.of(v), Map(), Map());
 ParamTrie.ofPath = function {
 	([...x], v) if x.length === 0 => ParamTrie.of(v),
 	([b, ...rest], v) => new ParamTrie(
 		Option.None,
 		match b {
-			Branch(b) => Map([[b, ParamTrie.create(rest, v)]]),
+			Branch(b) => Map([[b, ParamTrie.ofPath(rest, v)]]),
 			Param => Map()
 		},
 		match b {
 			Branch => Map(),
-			Param(p) => Map([[p, ParamTrie.create(rest, v)]])
+			Param(p) => Map([[p, ParamTrie.ofPath(rest, v)]])
 		}
-	)
+	),
+	(...x) => console.log(x)
 };
 
 ParamTrie.fromMap = λ m -> m.reduce(
@@ -87,10 +89,15 @@ function first {
 	[x] => Option.Some(x)
 }
 
+function flipResult {
+	LookupResult(value, params) => value.cata({
+		None: λ -> Option.None,
+		Some: λ x -> Option.Some(LookupResult(x, params))
+	})
+}
+
 function lookupOne(t, a) {
-	return first(lookup(t, a)).map(function {
-		LookupResult(value, params) => value.map(λ x -> LookupResult(x, params))
-	});
+	return first(lookup(t, a).map(flipResult).filter(λ[# instanceof Option.Some])).chain(λ i -> i);
 }
 
 ParamTrie.prototype.lookupOne = λ a -> lookupOne(this, a);
