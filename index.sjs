@@ -28,7 +28,7 @@ data ParamTrie {
 ParamTrie.empty = λ -> new ParamTrie(Option.None, Map(), Map());
 ParamTrie.of = λ v -> new ParamTrie(Option.of(v), Map(), Map());
 ParamTrie.ofPath = function {
-	([...x], v) if x.length === 0 => ParamTrie.of(v),
+	([], v) => ParamTrie.of(v),
 	([b, ...rest], v) => new ParamTrie(
 		Option.None,
 		match b {
@@ -64,7 +64,7 @@ function mergeResult {
 }
 
 function lookup {
-	(ParamTrie{value}, [...x]) if x.length === 0 => [LookupResult(value, Map())],
+	(ParamTrie{value}, []) => [LookupResult(value, Map())],
 	(ParamTrie{children, paramChildren}, [b, ...rest]) => {
 		return chain(
 			nullableToArray(children.get(b, null)),
@@ -84,7 +84,7 @@ function lookup {
 ParamTrie.prototype.lookup = λ a -> lookup(this, a);
 
 function first {
-	[...a] if a.length === 0 => Option.None,
+	[]  => Option.None,
 	[x] => Option.Some(x)
 }
 
@@ -96,7 +96,10 @@ function flipResult {
 }
 
 function lookupOne(t, a) {
-	return first(lookup(t, a).map(flipResult).filter(λ[# instanceof Option.Some])).chain(λ i -> i);
+	return first(lookup(t, a)
+		.map(flipResult)
+		.filter(λ[# instanceof Option.Some]))
+		.chain(λ i -> i); // join
 }
 
 ParamTrie.prototype.lookupOne = λ a -> lookupOne(this, a);
