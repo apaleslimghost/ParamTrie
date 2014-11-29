@@ -1,12 +1,29 @@
 var pt = require('./index.js');
 var expect = require('expect.js');
 var im = require('immutable');
-var op = require('fantasy-options');
+var Op = require('fantasy-options');
 var i  = require('util').inspect;
+var Eq = require('adt-simple').Eq;
 
-expect.Assertion.prototype.immutableEq = function(obj) {
+function opeq(a, b) {
+	return a.cata({
+		None: λ -> b === Op.None,
+		Some: λ x -> eq(b.x, x)
+	});
+}
+
+function eq {
+	(a @ im.Map, b @ im.Map) => im.is(a, b),
+	(a @ {equals}, b) => a.equals(b),
+	(a @ Op, b @ Op) => opeq(a, b),
+	(a, b) => a === b
+}
+
+Eq.nativeEquals = eq;
+
+expect.Assertion.prototype.eq = function(obj) {
 	this.assert(
-		im.is(obj, this.obj),
+		eq(this.obj, obj),
 		λ -> 'expected ' + i(this.obj) + ' to equal ' + i(obj),
 		λ -> 'expected ' + i(this.obj) + ' to not equal ' + i(obj)
 	);
@@ -20,13 +37,13 @@ describe "ParamTrie" {
 		}
 
 		it "should have no value" {
-			expect(pt.ParamTrie.empty()).to.have.property('value', op.None);
+			expect(pt.ParamTrie.empty()).to.have.property('value', Op.None);
 		}
 
 		it "should create empty things" {
 			var t = pt.ParamTrie.empty();
-			expect(t.children).to.immutableEq(im.Map());
-			expect(t.paramChildren).to.immutableEq(im.Map());
+			expect(t.children).to.eq(im.Map());
+			expect(t.paramChildren).to.eq(im.Map());
 		}
 	}
 
@@ -37,7 +54,7 @@ describe "ParamTrie" {
 
 		it "should have a value" {
 			var t = pt.ParamTrie.of('a')
-			expect(t.value).to.be.a(op.Some);
+			expect(t.value).to.be.a(Op.Some);
 			t.value.cata({
 				None: λ -> expect().fail('Not none'),
 				Some: λ x -> expect(x).to.be('a')
@@ -46,8 +63,16 @@ describe "ParamTrie" {
 
 		it "should create empty things" {
 			var t = pt.ParamTrie.of();
-			expect(t.children).to.immutableEq(im.Map());
-			expect(t.paramChildren).to.immutableEq(im.Map());
+			expect(t.children).to.eq(im.Map());
+			expect(t.paramChildren).to.eq(im.Map());
+		}
+	}
+
+	describe "ofPath" {
+		describe "with an empty path" {
+			it "should be of" {
+				expect(pt.ParamTrie.ofPath([], 'a')).to.eq(pt.ParamTrie.of('a'));
+			}
 		}
 	}
 }
