@@ -74,5 +74,99 @@ describe "ParamTrie" {
 				expect(pt.ParamTrie.ofPath([], 'a')).to.eq(pt.ParamTrie.of('a'));
 			}
 		}
+
+		describe "with a path" {
+			it "should nest under children with Branch" {
+				expect(
+					pt.ParamTrie.ofPath([pt.ParamBranch.Branch('foo')], 'a')
+				).to.eq(
+					new pt.ParamTrie(
+						Op.None,
+						im.Map({'foo': pt.ParamTrie.of('a')}),
+						im.Map()
+					)
+				);
+			}
+
+			it "should nest under paramChildren with Pranch" {
+				expect(
+					pt.ParamTrie.ofPath([pt.ParamBranch.Param('foo')], 'a')
+				).to.eq(
+					new pt.ParamTrie(
+						Op.None,
+						im.Map(),
+						im.Map({'foo': pt.ParamTrie.of('a')})
+					)
+				);
+			}
+
+			it "should recurse multiple branches" {
+				expect(
+					pt.ParamTrie.ofPath([
+						pt.ParamBranch.Branch('foo'),
+						pt.ParamBranch.Branch('bar')
+					], 'a')
+				).to.eq(
+					new pt.ParamTrie(
+						Op.None,
+						im.Map({'foo': pt.ParamTrie.ofPath([
+							pt.ParamBranch.Branch('bar')
+						], 'a')}),
+						im.Map()
+					)
+				);
+			}
+
+			it "should recurse multiple params" {
+				expect(
+					pt.ParamTrie.ofPath([
+						pt.ParamBranch.Param('foo'),
+						pt.ParamBranch.Param('bar')
+					], 'a')
+				).to.eq(
+					new pt.ParamTrie(
+						Op.None,
+						im.Map(),
+						im.Map({'foo': pt.ParamTrie.ofPath([
+							pt.ParamBranch.Param('bar')
+						], 'a')})
+					)
+				);
+			}
+
+			it "should recurse mixed branch and param" {
+				expect(
+					pt.ParamTrie.ofPath([
+						pt.ParamBranch.Branch('foo'),
+						pt.ParamBranch.Param('bar')
+					], 'a')
+				).to.eq(
+					new pt.ParamTrie(
+						Op.None,
+						im.Map({'foo': pt.ParamTrie.ofPath([
+							pt.ParamBranch.Param('bar')
+						], 'a')}),
+						im.Map()
+					)
+				);
+			}
+
+			it "should recurse mixed param and branch" {
+				expect(
+					pt.ParamTrie.ofPath([
+						pt.ParamBranch.Param('foo'),
+						pt.ParamBranch.Branch('bar')
+					], 'a')
+				).to.eq(
+					new pt.ParamTrie(
+						Op.None,
+						im.Map(),
+						im.Map({'foo': pt.ParamTrie.ofPath([
+							pt.ParamBranch.Branch('bar')
+						], 'a')})
+					)
+				);
+			}
+		}
 	}
 }
