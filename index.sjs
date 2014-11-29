@@ -39,8 +39,7 @@ ParamTrie.ofPath = function {
 			Branch => Map(),
 			Param(p) => Map([[p, ParamTrie.ofPath(rest, v)]])
 		}
-	),
-	(...x) => console.log(x)
+	)
 };
 
 ParamTrie.fromMap = λ m -> m.reduce(
