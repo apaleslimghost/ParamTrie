@@ -229,5 +229,29 @@ describe "ParamTrie" {
 				]);
 			}
 		}
+
+		describe "with multiple potential results" {
+			it "should return an array of concrete and param results" {
+				var t = new pt.ParamTrie(
+					Op.None,
+					im.Map([[
+						pt.ParamBranch.Branch('foo'),
+						pt.ParamTrie.of("a")
+					]]),
+					im.Map([
+						[pt.ParamBranch.Param('bar'), pt.ParamTrie.of("b")]
+						[pt.ParamBranch.Param('baz'), pt.ParamTrie.of("c")]
+					])
+				);
+
+				expect(
+					t.lookup(['foo'])
+				).to.eq([
+					pt.LookupResult(Op.Some("a"), im.Map()),
+					pt.LookupResult(Op.Some("b"), im.Map({bar:'foo'})),
+					pt.LookupResult(Op.Some("c"), im.Map({baz:'foo'}))
+				]);
+			}
+		}
 	}
 }
