@@ -324,4 +324,44 @@ describe "ParamTrie" {
 			}
 		}
 	}
+
+	describe "merge" {
+		describe "shallow tries" {
+			it "should keep nothing" {
+				var t1 = pt.ParamTrie.empty();
+				var t2 = pt.ParamTrie.empty();
+
+				expect(t1.merge(t2)).to.eq(
+					pt.ParamTrie.empty()
+				);
+				expect(t2.merge(t1)).to.eq(
+					pt.ParamTrie.empty()
+				);
+			}
+
+			it "should prefer values" {
+				var t1 = pt.ParamTrie.empty();
+				var t2 = pt.ParamTrie.of('a');
+
+				expect(t1.merge(t2)).to.eq(
+					pt.ParamTrie.of('a')
+				);
+				expect(t2.merge(t1)).to.eq(
+					pt.ParamTrie.of('a')
+				);
+			}
+
+			it "should use second value if both" {
+				var t1 = pt.ParamTrie.of('a');
+				var t2 = pt.ParamTrie.of('b');
+
+				expect(t1.merge(t2)).to.eq(
+					pt.ParamTrie.of('b')
+				);
+				expect(t2.merge(t1)).to.eq(
+					pt.ParamTrie.of('a')
+				);
+			}
+		}
+	}
 }
