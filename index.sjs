@@ -14,15 +14,15 @@ union ParamBranch {
 	Param  { value: * }
 } deriving Base;
 
-data ParamChild {
-	param: String,
-	child: ParamTrie
-} deriving Base;
-
 data ParamTrie {
 	value: Option,
 	children: Map,
 	paramChildren: Map
+} deriving Base;
+
+data LookupResult {
+	value: *,
+	params: Map
 } deriving Base;
 
 ParamTrie.empty = λ -> new ParamTrie(Option.None, Map(), Map());
@@ -46,11 +46,6 @@ ParamTrie.fromMap = λ m -> m.reduce(
 	λ (t, v, k) -> t.insertPath(k, v),
 	ParamTrie.empty()
 );
-
-data LookupResult {
-	value: *,
-	params: Map
-} deriving require('adt-simple').Base;
 
 function chain(a, f) {
 	return a.reduce(
@@ -96,10 +91,11 @@ function flipResult {
 }
 
 function lookupOne(t, a) {
-	return first(lookup(t, a)
+	return first(
+		lookup(t, a)
 		.map(flipResult)
-		.filter(λ[# instanceof Option.Some]))
-		.chain(λ i -> i); // join
+		.filter(λ[# instanceof Option.Some])
+	).chain(λ[#]); // join
 }
 
 ParamTrie.prototype.lookupOne = λ a -> lookupOne(this, a);

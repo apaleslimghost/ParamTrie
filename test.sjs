@@ -12,10 +12,21 @@ function opeq(a, b) {
 	});
 }
 
+function zip(as, bs) {
+	return as.map(λ (a, i) -> [a, bs[i]]);
+}
+
+function arrayEq(as, bs) {
+	return zip(as, bs).every(function {
+		[a, b] => eq(a, b)
+	})
+}
+
 function eq {
 	(a @ im.Map, b @ im.Map) => im.is(a, b),
 	(a @ {equals}, b) => a.equals(b),
 	(a @ Op, b @ Op) => opeq(a, b),
+	(a @ Array, b @ Array) => arrayEq(a, b),
 	(a, b) => a === b
 }
 
@@ -166,6 +177,56 @@ describe "ParamTrie" {
 						], 'a')})
 					)
 				);
+			}
+		}
+	}
+
+	describe "lookup" {
+		describe "with empty path" {
+			it "should return value (none)" {
+				var t = pt.ParamTrie.empty();
+				expect(
+					t.lookup([])
+				).to.eq([
+					pt.LookupResult(Op.None, im.Map())
+				]);
+			}
+
+			it "should return value (some)" {
+				var t = pt.ParamTrie.of("a");
+				expect(
+					t.lookup([])
+				).to.eq([
+					pt.LookupResult(Op.Some("a"), im.Map())
+				]);
+			}
+		}
+
+		describe "with non-empty path" {
+			it "should recurse when path matches branch" {
+				var t = pt.ParamTrie.ofPath([
+					pt.ParamBranch.Branch('foo')
+				], 'a');
+
+				expect(
+					t.lookup(['foo'])
+				).to.eq(
+					pt.ParamTrie.of("a").lookup([])
+				);
+			}
+
+			it "should recurse when path matches param and add to map" {
+				var t = pt.ParamTrie.ofPath([
+					pt.ParamBranch.Param('foo')
+				], 'a');
+
+				var r = pt.ParamTrie.of("a").lookup([])[0];
+
+				expect(
+					t.lookup(['bar'])
+				).to.eq([
+					pt.LookupResult(r.value, im.Map({foo: 'bar'}))
+				]);
 			}
 		}
 	}
