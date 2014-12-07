@@ -288,4 +288,163 @@ describe "ParamTrie" {
 			}
 		}
 	}
+
+	describe "fromMap" {
+		it "should convert empty map to empty trie" {
+			expect(pt.ParamTrie.fromMap(im.Map())).to.eq(pt.ParamTrie.empty());
+		}
+
+		describe "with single-item keys" {
+			it "should add one branch key to trie" {
+				expect(pt.ParamTrie.fromMap(im.Map([
+					[[pt.ParamBranch.Branch('foo')], 'bar']
+				]))).to.eq(pt.ParamTrie(
+					[],
+					im.Map([[
+						pt.ParamBranch.Branch('foo'),
+						pt.ParamTrie.of('bar')
+					]])
+				));
+			}
+
+			it "should add a few branch keys to trie" {
+				expect(pt.ParamTrie.fromMap(im.Map([
+					[[pt.ParamBranch.Branch('foo')], 'a'],
+					[[pt.ParamBranch.Branch('bar')], 'b'],
+					[[pt.ParamBranch.Branch('baz')], 'c']
+				]))).to.eq(pt.ParamTrie(
+					[],
+					im.Map([
+						[pt.ParamBranch.Branch('foo'), pt.ParamTrie.of('a')],
+						[pt.ParamBranch.Branch('bar'), pt.ParamTrie.of('b')],
+						[pt.ParamBranch.Branch('baz'), pt.ParamTrie.of('c')]
+					])
+				));
+			}
+
+			it "should merge duplicate branch keys" {
+				expect(pt.ParamTrie.fromMap(im.Map([
+					[[pt.ParamBranch.Branch('foo')], 'a'],
+					[[pt.ParamBranch.Branch('foo')], 'b']
+				]))).to.eq(pt.ParamTrie(
+					[],
+					im.Map([[
+						pt.ParamBranch.Branch('foo'),
+						pt.ParamTrie(['a','b'], im.Map())
+					]])
+				));
+			}
+
+			it "should add one param key to trie" {
+				expect(pt.ParamTrie.fromMap(im.Map([
+					[[pt.ParamBranch.Param('foo')], 'bar']
+				]))).to.eq(pt.ParamTrie(
+					[],
+					im.Map([[
+						pt.ParamBranch.Param('foo'),
+						pt.ParamTrie.of('bar')
+					]])
+				));
+			}
+
+			it "should add a few param keys to trie" {
+				expect(pt.ParamTrie.fromMap(im.Map([
+					[[pt.ParamBranch.Param('foo')], 'a'],
+					[[pt.ParamBranch.Param('bar')], 'b'],
+					[[pt.ParamBranch.Param('baz')], 'c']
+				]))).to.eq(pt.ParamTrie(
+					[],
+					im.Map([
+						[pt.ParamBranch.Param('foo'), pt.ParamTrie.of('a')],
+						[pt.ParamBranch.Param('bar'), pt.ParamTrie.of('b')],
+						[pt.ParamBranch.Param('baz'), pt.ParamTrie.of('c')]
+					])
+				));
+			}
+
+			it "should add mixed keys to the trie" {
+				expect(pt.ParamTrie.fromMap(im.Map([
+					[[pt.ParamBranch.Param('foo')], 'a'],
+					[[pt.ParamBranch.Branch('bar')], 'b']
+				]))).to.eq(pt.ParamTrie(
+					[],
+					im.Map([
+						[pt.ParamBranch.Param('foo'), pt.ParamTrie.of('a')],
+						[pt.ParamBranch.Branch('bar'), pt.ParamTrie.of('b')]
+					])
+				));
+			}
+		}
+
+		describe "longer keys" {
+			it "should nest a single key of branches" {
+				expect(pt.ParamTrie.fromMap(im.Map([[
+					[
+						pt.ParamBranch.Branch('foo'),
+						pt.ParamBranch.Branch('bar'),
+					],
+					'baz'
+				]]))).to.eq(pt.ParamTrie(
+					[],
+					im.Map([[
+						pt.ParamBranch.Branch('foo'),
+						pt.ParamTrie(
+							[],
+							im.Map([[
+								pt.ParamBranch.Branch('bar'),
+								pt.ParamTrie.of('baz')
+							]])
+						)
+					]])
+				));
+			}
+
+			it "should nest a single key of params" {
+				expect(pt.ParamTrie.fromMap(im.Map([[
+					[
+						pt.ParamBranch.Param('foo'),
+						pt.ParamBranch.Param('bar'),
+					],
+					'baz'
+				]]))).to.eq(pt.ParamTrie(
+					[],
+					im.Map([[
+						pt.ParamBranch.Param('foo'),
+						pt.ParamTrie(
+							[],
+							im.Map([[
+								pt.ParamBranch.Param('bar'),
+								pt.ParamTrie.of('baz')
+							]])
+						)
+					]])
+				));
+			}
+
+			it "should merge multiple keys" {
+				expect(pt.ParamTrie.fromMap(im.Map([
+					[[
+						pt.ParamBranch.Branch('foo'),
+						pt.ParamBranch.Branch('bar'),
+					], 'a'],
+					[[
+						pt.ParamBranch.Branch('foo'),
+						pt.ParamBranch.Branch('baz'),
+					], 'b'],
+				]))).to.eq(pt.ParamTrie(
+					[],
+					im.Map([[
+						pt.ParamBranch.Branch('foo'),
+						pt.ParamTrie(
+							[],
+							im.Map([
+								[pt.ParamBranch.Branch('bar'), pt.ParamTrie.of('a')],
+								[pt.ParamBranch.Branch('baz'), pt.ParamTrie.of('b')],
+							])
+						)
+					]])
+				));
+			}
+		}
+	}
 }
