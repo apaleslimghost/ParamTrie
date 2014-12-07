@@ -72,7 +72,7 @@ Combines two tries. When paths collide, they're merged recursively. Values at th
 
 Special case of merge for a single path. Equivalent to `trie.merge(ParamTrie.ofPath(path, value))`.
 
-#### `ParamTrie<T>::lookup(path: Array<String>): Array<LookupResult>>
+#### `ParamTrie<T>::lookup(path: Array<String>): Array<LookupResult>`
 
 Returns all of the matches of a particular path. Since multiple parameterised paths can match a given lookup path, `lookup` returns an array of results.
 
