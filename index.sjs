@@ -1,6 +1,5 @@
-var Option = require('fantasy-options');
-var Map    = require('immutable').Map;
-var Base   = require('adt-simple').Base;
+var Map  = require('immutable').Map;
+var Base = require('adt-simple').Base;
 
 function nullableToArray {
 	null => [],
@@ -16,7 +15,7 @@ union ParamBranch {
 ParamBranch.prototype.inspect = ParamBranch.prototype.toString;
 
 data ParamTrie {
-	value: Option,
+	value: Array,
 	children: Map
 } deriving Base;
 ParamTrie.prototype.inspect = ParamTrie.prototype.toString;
@@ -27,12 +26,12 @@ data LookupResult {
 } deriving Base;
 LookupResult.prototype.inspect = LookupResult.prototype.toString;
 
-ParamTrie.empty = λ -> new ParamTrie(Option.None, Map());
-ParamTrie.of = λ v -> new ParamTrie(Option.of(v), Map());
+ParamTrie.empty = λ -> new ParamTrie([], Map());
+ParamTrie.of = λ v -> new ParamTrie([v], Map());
 ParamTrie.ofPath = function {
 	([], v) => ParamTrie.of(v),
 	([b, ...rest], v) => new ParamTrie(
-		Option.None,
+		[],
 		Map([[b, ParamTrie.ofPath(rest, v)]])
 	)
 };
@@ -54,6 +53,7 @@ function mergeResult {
 }
 
 function lookup {
+	(ParamTrie([], *), []) => [],
 	(ParamTrie{value}, []) => [LookupResult(value, Map())],
 	(ParamTrie{children}, [b, ...rest]) => chain(
 		nullableToArray(children.get(Branch(b), null)),
@@ -72,41 +72,9 @@ function lookup {
 
 ParamTrie.prototype.lookup = λ a -> lookup(this, a);
 
-function first {
-	[]  => Option.None,
-	[x, ...xs] => Option.Some(x)
-}
-
-function flipResult {
-	LookupResult(value, params) => value.cata({
-		None: λ -> Option.None,
-		Some: λ x -> Option.Some(LookupResult(x, params))
-	})
-}
-
-function lookupOne(t, a) {
-	return first(
-		lookup(t, a)
-		.map(flipResult)
-		.filter(λ[# instanceof Option.Some])
-	).chain(λ[#]); // join
-}
-
-ParamTrie.prototype.lookupOne = λ a -> lookupOne(this, a);
-
-function mergeVals(v1, v2) {
-	return v1.cata({
-		None: λ -> v2,
-		Some: λ x -> v2.cata({
-			None: λ -> Option.of(x),
-			Some: Option.of
-		})
-	});
-}
-
 function merge {
 	(ParamTrie(v1, c1), ParamTrie(v2, c2)) => new ParamTrie(
-		mergeVals(v1, v2),
+		v1.concat(v2),
 		c1.mergeWith(merge, c2)
 	)
 }
