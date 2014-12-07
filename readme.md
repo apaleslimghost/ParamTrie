@@ -1,5 +1,9 @@
 <h1 align="center">
-param-trie
+param-trie<br>
+
+<a href="https://travis-ci.org/quarterto/ParamTrie" id="status-image-popup">
+  <img src="https://travis-ci.org/quarterto/ParamTrie.svg" alt="Build status">
+</a>
 </h1>
 
 ## What's a param trie?
