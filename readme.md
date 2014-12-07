@@ -1,6 +1,6 @@
 <h1 align="center">
 param-trie<br>
-
+<code>npm install param-trie</code><br>
 <a href="https://travis-ci.org/quarterto/ParamTrie" id="status-image-popup">
   <img src="https://travis-ci.org/quarterto/ParamTrie.svg" alt="Build status">
 </a>
