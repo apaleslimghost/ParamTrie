@@ -17,8 +17,7 @@ ParamBranch.prototype.inspect = ParamBranch.prototype.toString;
 
 data ParamTrie {
 	value: Option,
-	children: Map,
-	paramChildren: Map
+	children: Map
 } deriving Base;
 ParamTrie.prototype.inspect = ParamTrie.prototype.toString;
 
@@ -28,20 +27,13 @@ data LookupResult {
 } deriving Base;
 LookupResult.prototype.inspect = LookupResult.prototype.toString;
 
-ParamTrie.empty = λ -> new ParamTrie(Option.None, Map(), Map());
-ParamTrie.of = λ v -> new ParamTrie(Option.of(v), Map(), Map());
+ParamTrie.empty = λ -> new ParamTrie(Option.None, Map());
+ParamTrie.of = λ v -> new ParamTrie(Option.of(v), Map());
 ParamTrie.ofPath = function {
 	([], v) => ParamTrie.of(v),
 	([b, ...rest], v) => new ParamTrie(
 		Option.None,
-		match b {
-			Branch(b) => Map([[b, ParamTrie.ofPath(rest, v)]]),
-			Param => Map()
-		},
-		match b {
-			Branch => Map(),
-			Param(p) => Map([[p, ParamTrie.ofPath(rest, v)]])
-		}
+		Map([[b, ParamTrie.ofPath(rest, v)]])
 	)
 };
 
@@ -63,16 +55,17 @@ function mergeResult {
 
 function lookup {
 	(ParamTrie{value}, []) => [LookupResult(value, Map())],
-	(ParamTrie{children, paramChildren}, [b, ...rest]) => chain(
-		nullableToArray(children.get(b, null)),
+	(ParamTrie{children}, [b, ...rest]) => chain(
+		nullableToArray(children.get(Branch(b), null)),
 		function {
 			trie @ ParamTrie => lookup(trie, rest)
 		}
 	).concat(
-		chain(pairs(paramChildren), function {
-			[param, child] => lookup(child, rest).map(function {
+		chain(pairs(children), function {
+			[Param(param), child] => lookup(child, rest).map(function {
 				result @ LookupResult => mergeResult(result, Map([[param, b]]))
-			})
+			}),
+			[Branch, child] => []
 		})
 	);
 }
@@ -112,10 +105,9 @@ function mergeVals(v1, v2) {
 }
 
 function merge {
-	(ParamTrie(v1, c1, pc1), ParamTrie(v2, c2, pc2)) => new ParamTrie(
+	(ParamTrie(v1, c1), ParamTrie(v2, c2)) => new ParamTrie(
 		mergeVals(v1, v2),
-		c1.mergeWith(merge, c2),
-		pc1.mergeWith(merge, pc2)
+		c1.mergeWith(merge, c2)
 	)
 }
 

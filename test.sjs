@@ -57,7 +57,6 @@ describe "ParamTrie" {
 		it "should create empty things" {
 			var t = pt.ParamTrie.empty();
 			expect(t.children).to.eq(im.Map());
-			expect(t.paramChildren).to.eq(im.Map());
 		}
 	}
 
@@ -78,7 +77,6 @@ describe "ParamTrie" {
 		it "should create empty things" {
 			var t = pt.ParamTrie.of();
 			expect(t.children).to.eq(im.Map());
-			expect(t.paramChildren).to.eq(im.Map());
 		}
 	}
 
@@ -96,8 +94,7 @@ describe "ParamTrie" {
 				).to.eq(
 					new pt.ParamTrie(
 						Op.None,
-						im.Map({'foo': pt.ParamTrie.of('a')}),
-						im.Map()
+						im.Map([[pt.ParamBranch.Branch('foo'), pt.ParamTrie.of('a')]])
 					)
 				);
 			}
@@ -108,8 +105,7 @@ describe "ParamTrie" {
 				).to.eq(
 					new pt.ParamTrie(
 						Op.None,
-						im.Map(),
-						im.Map({'foo': pt.ParamTrie.of('a')})
+						im.Map([[pt.ParamBranch.Param('foo'), pt.ParamTrie.of('a')]])
 					)
 				);
 			}
@@ -123,10 +119,9 @@ describe "ParamTrie" {
 				).to.eq(
 					new pt.ParamTrie(
 						Op.None,
-						im.Map({'foo': pt.ParamTrie.ofPath([
+						im.Map([[pt.ParamBranch.Branch('foo'), pt.ParamTrie.ofPath([
 							pt.ParamBranch.Branch('bar')
-						], 'a')}),
-						im.Map()
+						], 'a')]])
 					)
 				);
 			}
@@ -140,10 +135,9 @@ describe "ParamTrie" {
 				).to.eq(
 					new pt.ParamTrie(
 						Op.None,
-						im.Map(),
-						im.Map({'foo': pt.ParamTrie.ofPath([
+						im.Map([[pt.ParamBranch.Param('foo'), pt.ParamTrie.ofPath([
 							pt.ParamBranch.Param('bar')
-						], 'a')})
+						], 'a')]])
 					)
 				);
 			}
@@ -157,9 +151,9 @@ describe "ParamTrie" {
 				).to.eq(
 					new pt.ParamTrie(
 						Op.None,
-						im.Map({'foo': pt.ParamTrie.ofPath([
+						im.Map([[pt.ParamBranch.Branch('foo'), pt.ParamTrie.ofPath([
 							pt.ParamBranch.Param('bar')
-						], 'a')}),
+						], 'a')]]),
 						im.Map()
 					)
 				);
@@ -174,10 +168,9 @@ describe "ParamTrie" {
 				).to.eq(
 					new pt.ParamTrie(
 						Op.None,
-						im.Map(),
-						im.Map({'foo': pt.ParamTrie.ofPath([
+						im.Map([[pt.ParamBranch.Param('foo'), pt.ParamTrie.ofPath([
 							pt.ParamBranch.Branch('bar')
-						], 'a')})
+						], 'a')]])
 					)
 				);
 			}
@@ -237,11 +230,8 @@ describe "ParamTrie" {
 			it "should return an array of concrete and param results" {
 				var t = new pt.ParamTrie(
 					Op.None,
-					im.Map([[
-						pt.ParamBranch.Branch('foo'),
-						pt.ParamTrie.of("a")
-					]]),
 					im.Map([
+						[pt.ParamBranch.Branch('foo'), pt.ParamTrie.of("a")],
 						[pt.ParamBranch.Param('bar'), pt.ParamTrie.of("b")]
 						[pt.ParamBranch.Param('baz'), pt.ParamTrie.of("c")]
 					])
@@ -309,11 +299,11 @@ describe "ParamTrie" {
 			it "should return the first result" {// TODO: most specific
 				var t = new pt.ParamTrie(
 					Op.None,
-					im.Map({foo: pt.ParamTrie.of("a")}),
-					im.Map({
-						bar: pt.ParamTrie.of("b"),
-						baz: pt.ParamTrie.of("c")
-					})
+					im.Map([
+						[pt.ParamBranch.Branch('foo'), pt.ParamTrie.of("a")],
+						[pt.ParamBranch.Param('bar'),  pt.ParamTrie.of("b")],
+						[pt.ParamBranch.Param('baz'),  pt.ParamTrie.of("c")]
+					])
 				);
 
 				expect(
