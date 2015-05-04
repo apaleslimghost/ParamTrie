@@ -83,5 +83,9 @@ Returns all of the matches of a particular path. Since multiple parameterised pa
 ##### `LookupResult(value, params)`
 A data type to encapsulate results from `lookup`. `value` is the array of values found at the path, and `params` is a map of parameters in the trie to values from the lookup path.
 
+#### `ParamTrie<T>::indent(path: Array<ParamBranch>)`
+
+Returns the trie nested under the path. `ParamTrie.ofPath(p, v)` is equivalent to `ParamTrie.of(v).indent(p)`.
+
 ## Licence
 MIT.

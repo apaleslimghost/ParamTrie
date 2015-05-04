@@ -82,6 +82,16 @@ function merge {
 ParamTrie.prototype.merge = λ o -> merge(this, o);
 ParamTrie.prototype.insertPath = λ (p, v) -> merge(this, ParamTrie.ofPath(p, v));
 
+function indent {
+	(p @ ParamTrie, []) => p,
+	(p @ ParamTrie, [b, ...rest]) => new ParamTrie(
+		[],
+		Map([[b, indent(p, rest)]])
+	)
+}
+
+ParamTrie.prototype.indent = λ p -> indent(this, p);
+
 exports.ParamTrie    = ParamTrie;
 exports.ParamBranch  = ParamBranch;
 exports.LookupResult = LookupResult;

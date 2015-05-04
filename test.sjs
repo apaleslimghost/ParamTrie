@@ -447,4 +447,64 @@ describe "ParamTrie" {
 			}
 		}
 	}
+
+	describe "indent" {
+		it "should indent a trie with a branch" {
+			expect(
+				pt.ParamTrie.of('a').indent([
+					pt.ParamBranch.Branch('foo')
+				])
+			).to.eq(pt.ParamTrie.ofPath([pt.ParamBranch.Branch('foo')], 'a'));
+		}
+		it "should indent a trie with some branches" {
+			expect(
+				pt.ParamTrie.of('a').indent([
+					pt.ParamBranch.Branch('foo'),
+					pt.ParamBranch.Branch('bar')
+				])
+			).to.eq(pt.ParamTrie.ofPath([
+					pt.ParamBranch.Branch('foo'),
+					pt.ParamBranch.Branch('bar')
+			], 'a'));
+		}
+		it "should indent a trie with a param" {
+			expect(
+				pt.ParamTrie.of('a').indent([
+					pt.ParamBranch.Param('foo')
+				])
+			).to.eq(pt.ParamTrie.ofPath([pt.ParamBranch.Param('foo')], 'a'));
+		}
+		it "should indent a trie with some branches" {
+			expect(
+				pt.ParamTrie.of('a').indent([
+					pt.ParamBranch.Param('foo'),
+					pt.ParamBranch.Param('bar')
+				])
+			).to.eq(pt.ParamTrie.ofPath([
+					pt.ParamBranch.Param('foo'),
+					pt.ParamBranch.Param('bar')
+			], 'a'));
+		}
+		it "should indent a trie with a mixed path" {
+			expect(
+				pt.ParamTrie.of('a').indent([
+					pt.ParamBranch.Param('foo'),
+					pt.ParamBranch.Branch('bar')
+				])
+			).to.eq(pt.ParamTrie.ofPath([
+					pt.ParamBranch.Param('foo'),
+					pt.ParamBranch.Branch('bar')
+			], 'a'));
+		}
+		it "should indent a trie that already has a phat" {
+			expect(
+				pt.ParamTrie.ofPath([pt.ParamBranch.Branch('foo')], 'a').indent([
+					pt.ParamBranch.Branch('bar')
+				])
+			).to.eq(pt.ParamTrie.ofPath([
+					pt.ParamBranch.Branch('bar'),
+					pt.ParamBranch.Branch('foo')
+			], 'a'));
+		}
+	}
 }
