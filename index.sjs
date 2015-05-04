@@ -28,13 +28,7 @@ LookupResult.prototype.inspect = LookupResult.prototype.toString;
 
 ParamTrie.empty = λ -> new ParamTrie([], Map());
 ParamTrie.of = λ v -> new ParamTrie([v], Map());
-ParamTrie.ofPath = function {
-	([], v) => ParamTrie.of(v),
-	([b, ...rest], v) => new ParamTrie(
-		[],
-		Map([[b, ParamTrie.ofPath(rest, v)]])
-	)
-};
+ParamTrie.ofPath = λ (p, v) -> ParamTrie.of(v).indent(p);
 
 ParamTrie.fromMap = λ m -> m.reduce(
 	λ (t, v, k) -> t.insertPath(k, v),
