@@ -40,6 +40,13 @@ class ParamTrie {
 		});
 	}
 
+	static fromMap(map) {
+		return Array.from(map.entries()).reduce(
+			(trie, [path, value]) => trie.merge(ParamTrie.ofPath(path, value)),
+			ParamTrie.empty()
+		);
+	}
+
 	mergeRecord(type, other) {
 		for(const data in other[type]) {
 			if(this[type][data]) {
@@ -77,11 +84,16 @@ class ParamTrie {
 		const [first, ...rest] = path;
 		const results = this.branch[first] ? this.branch[first].lookup(rest) : [];
 
-		return Object.keys(this.param).reduce((results, param) => {
-			const trie = this.param[param];
-			params[param] = first;
-			return results.concat(trie.lookup(rest, params));
-		}, results);
+		return Object.keys(this.param).reduce((results, param) => results.concat(
+			this.param[param].lookup(
+				rest,
+				Object.assign(
+					{}, params, {
+						[param]: first
+					}
+				)
+			)
+		), results);
 	}
 
 	indent(path) {
