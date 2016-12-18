@@ -99,6 +99,10 @@ class ParamTrie {
 	indent(path) {
 		return ParamTrie.ofPath(path, this);
 	}
+
+	insertPath(path, value) {
+		return this.merge(ParamTrie.ofPath(path, value));
+	}
 }
 
 module.exports = ParamTrie;

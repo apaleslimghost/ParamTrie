@@ -1,6 +1,5 @@
 <h1 align="center">
 param-trie<br>
-<code>npm install param-trie</code><br>
 <a href="https://travis-ci.org/quarterto/ParamTrie" id="status-image-popup">
   <img src="https://travis-ci.org/quarterto/ParamTrie.svg" alt="Build status">
 </a>
@@ -22,68 +21,66 @@ and those red parameters get filled in when we look up:
 ## Usage
 
 ```javascript
-var pt = require('param-trie');
-var Param = pt.ParamBranch.Param,
-    Branch = pt.ParamBranch.Branch;
+const ParamTrie = require('param-trie');
+const {param, branch} = ParamTrie;
 
-var t = pt.ParamTrie.ofPath([
-	Branch('a'),
-	Branch('b'),
-	Param('c')
+var t = ParamTrie.ofPath([
+	branch('a'),
+	branch('b'),
+	param('c')
 ], 'foo');
 
-t.lookup(['a', 'b', 'x']); //⇒ [LookupResult(['foo']), Map { 'c': 'x' }]
+t.lookup(['a', 'b', 'x']); //⇒ [{value: 'foo', params: {c: 'x'}}]
 
 var t2 = t.insertPath([
-	Branch('a'),
-	Param('d'),
-	Branch('e')
+	branch('a'),
+	param('d'),
+	branch('e')
 ], 'bar');
 
-t.lookup(['a', 'x', 'e']); //⇒ [LookupResult(['bar']), Map { 'd': 'x' }]
+t2.lookup(['a', 'x', 'e']); //⇒ [{value: 'bar', params: {d: 'x'}}]
 ```
 
 ## Api
 ### Creating a `ParamTrie`
 #### The hard way: `ParamTrie` constructor
-##### `new ParamTrie(values: Array, children: Map<ParamBranch, ParamTrie>)`
+##### `new ParamTrie(values, {param, branch})`
 
-Takes an array of values and an [Immutable](https://github.com/facebook/immutable-js) Map of children. `ParamBranch` is a constructor with two children, `Param` and `Branch`, which denote whether the child is a parameter to be filled in or a concrete value.
+Takes single value or an array of values and an object listing the trie's children. The object should have keys `param` and `branch`, each being an object listing children of that type, with keys as names of params or text of branches and values as the `ParamTrie` child.
 
 #### For little tries: `empty` and `of`
-##### `ParamTrie.empty(): ParamTrie<void>`
+##### `ParamTrie.empty()`
 Returns a trie with no values and no children.
 
-##### `ParamTrie.of<T>(x: T): ParamTrie<T>`
-Returns a trie with the single value `x` and no children.
+##### `ParamTrie.of(value)`
+Returns a trie with a single value or array of values and no children.
 
 #### For narrow tries: `ofPath`
-##### `ParamTrie.ofPath<T>(path: Array<ParamBranch>, value: T): ParamTrie<T>`
+##### `ParamTrie.ofPath(path, value)`
 
 Creates a nested trie with the heirarchy as given by `path`. `ParamTrie.ofPath([], x)` is equivalent to `ParamTrie.of(x)`.
 
 #### The easy way: `fromMap`
-##### `ParamTrie.fromMap<T>(map: Map<Array<ParamBranch>, T>): ParamTrie<T>`
+##### `ParamTrie.fromMap(map)`
 
-Given a map of paths to values, build an entire trie with the correct heirarchy.
+Given a `Map` of paths to values, build an entire trie with the correct heirarchy.
 
 ### Methods
-#### `ParamTrie<T>::merge(ParamTrie<T>): ParamTrie<T>`
+#### `trie.merge(other)`
 
-Combines two tries. When paths collide, they're merged recursively. Values at the same path are concatenated.
+Combines two tries immutably; returns a new trie and leaves the originals unmodified. When paths collide, they're merged recursively. Values at the same path are concatenated.
 
-#### `ParamTrie<T>::insertPath(path, value): ParamTrie<T>`
+#### `trie.insertPath(path, value)`
 
 Special case of merge for a single path. Equivalent to `trie.merge(ParamTrie.ofPath(path, value))`.
 
-#### `ParamTrie<T>::lookup(path: Array<String>): Array<LookupResult>`
+#### `trie.lookup(path)`
 
-Returns all of the matches of a particular path. Since multiple parameterised paths can match a given lookup path, `lookup` returns an array of results.
+Returns all of the matches of a particular path. Since multiple parameterised paths can match a given lookup path and a trie can have multiple values, `lookup` returns an array of results.
 
-##### `LookupResult(value, params)`
-A data type to encapsulate results from `lookup`. `value` is the array of values found at the path, and `params` is a map of parameters in the trie to values from the lookup path.
+The values of the returned array are objects with keys `value` and `params`. `value` is the value at the resolved point in the tree. `params` is an object containing concrete values of params found in the heirarchy, filled in from the lookup path. If the lookup resolves to a trie with multiple values, returns one result for each value.
 
-#### `ParamTrie<T>::indent(path: Array<ParamBranch>)`
+#### `trie.indent(path)`
 
 Returns the trie nested under the path. `ParamTrie.ofPath(p, v)` is equivalent to `ParamTrie.of(v).indent(p)`.
 
