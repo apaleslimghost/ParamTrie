@@ -9,15 +9,15 @@ param-trie<br>
 ## What's a param trie?
 It's like a trie but with holes that get filled in when you look up a result. So, given the map
 
-![](images/paths.png)
+<img src="images/paths.png" width="387">
 
 we get the trie
 
-![](images/trie.png)
+<img src="images/trie.png" width="221">
 
 and those red parameters get filled in when we look up:
 
-![](images/lookup.png)
+<img src="images/lookup.png" width="223">
 
 ## Usage
 
