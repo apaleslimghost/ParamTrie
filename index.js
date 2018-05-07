@@ -1,7 +1,19 @@
+//@flow
+
 const record = type => data => ({type, data});
 
-class ParamTrie {
-	constructor(value = [], {param = {}, branch = {}} = {}) {
+class ParamTrie<T> {
+	value: Array<T>;
+	param: Object;
+	branch: Object;
+
+	constructor(
+		value: Array<T> = [],
+		{param = {}, branch = {}}: {param: Object, branch: Object} = {
+			param: {},
+			branch: {},
+		},
+	) {
 		this.value = [].concat(value);
 		this.param = param;
 		this.branch = branch;
@@ -24,8 +36,8 @@ class ParamTrie {
 	}
 
 	static ofPath(path, value) {
-		if(path.length === 0) {
-			if(value instanceof ParamTrie) {
+		if (path.length === 0) {
+			if (value instanceof ParamTrie) {
 				return value;
 			}
 
@@ -35,21 +47,21 @@ class ParamTrie {
 		const [{type, data}] = path;
 		return new ParamTrie([], {
 			[type]: {
-				[data]: ParamTrie.ofPath(path.slice(1), value)
-			}
+				[data]: ParamTrie.ofPath(path.slice(1), value),
+			},
 		});
 	}
 
 	static fromMap(map) {
 		return Array.from(map.entries()).reduce(
 			(trie, [path, value]) => trie.merge(ParamTrie.ofPath(path, value)),
-			ParamTrie.empty()
+			ParamTrie.empty(),
 		);
 	}
 
 	mergeRecord(type, other) {
-		for(const data in other[type]) {
-			if(this[type][data]) {
+		for (const data in other[type]) {
+			if (this[type][data]) {
 				this[type][data] = this[type][data].merge(other[type][data]);
 			} else {
 				this[type][data] = other[type][data];
@@ -58,13 +70,10 @@ class ParamTrie {
 	}
 
 	merge(other) {
-		const out = new ParamTrie(
-			this.value.concat(other.value),
-			{
-				param: Object.assign({}, this.param),
-				branch: Object.assign({}, this.branch)
-			}
-		);
+		const out = new ParamTrie(this.value.concat(other.value), {
+			param: Object.assign({}, this.param),
+			branch: Object.assign({}, this.branch),
+		});
 
 		out.mergeRecord('param', other);
 		out.mergeRecord('branch', other);
@@ -72,9 +81,9 @@ class ParamTrie {
 		return out;
 	}
 
-	lookup(path, params = {}) {
-		if(path.length === 0) {
-			if(this.value.length === 0) {
+	lookup(path: Array<String>, params: ?Object = {}) {
+		if (path.length === 0) {
+			if (this.value.length === 0) {
 				return [];
 			}
 
@@ -84,23 +93,25 @@ class ParamTrie {
 		const [first, ...rest] = path;
 		const results = this.branch[first] ? this.branch[first].lookup(rest) : [];
 
-		return Object.keys(this.param).reduce((results, param) => results.concat(
-			this.param[param].lookup(
-				rest,
-				Object.assign(
-					{}, params, {
-						[param]: first
-					}
-				)
-			)
-		), results);
+		return Object.keys(this.param).reduce(
+			(results, param) =>
+				results.concat(
+					this.param[param].lookup(
+						rest,
+						Object.assign({}, params, {
+							[param]: first,
+						}),
+					),
+				),
+			results,
+		);
 	}
 
-	indent(path) {
+	indent(path: Array<String>) {
 		return ParamTrie.ofPath(path, this);
 	}
 
-	insertPath(path, value) {
+	insertPath(path: Array<String>, value: T) {
 		return this.merge(ParamTrie.ofPath(path, value));
 	}
 }
